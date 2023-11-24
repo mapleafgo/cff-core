@@ -25,7 +25,6 @@ type Tun struct {
 	DNSHijack           []string   `yaml:"dns-hijack" json:"dns-hijack"`
 	AutoRoute           bool       `yaml:"auto-route" json:"auto-route"`
 	AutoDetectInterface bool       `yaml:"auto-detect-interface" json:"auto-detect-interface"`
-	RedirectToTun       []string   `yaml:"-" json:"-"`
 
 	MTU                    uint32         `yaml:"mtu" json:"mtu,omitempty"`
 	Inet4Address           []netip.Prefix `yaml:"inet4-address" json:"inet4-address,omitempty"`

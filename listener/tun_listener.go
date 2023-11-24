@@ -2,7 +2,6 @@ package listener
 
 import (
 	"github.com/Dreamacro/clash/adapter/inbound"
-	"github.com/Dreamacro/clash/component/ebpf"
 	LC "github.com/Dreamacro/clash/config"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/listener/sing_tun"
@@ -14,20 +13,11 @@ import (
 
 var (
 	tunLister *sing_tun.Listener
-	tcProgram *ebpf.TcEBpfProgram
 
 	tunMux sync.Mutex
-	tcMux  sync.Mutex
 
 	LastTunConf LC.Tun
 )
-
-func GetTunConf() LC.Tun {
-	if tunLister == nil {
-		return LastTunConf
-	}
-	return tunLister.Config()
-}
 
 func ReCreateTun(tunConf LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.PacketAdapter) {
 	tunMux.Lock()
@@ -64,39 +54,6 @@ func ReCreateTun(tunConf LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbou
 	tunLister = lister
 
 	log.Infoln("[TUN] Tun adapter listening at: %s", tunLister.Address())
-}
-
-func ReCreateRedirToTun(ifaceNames []string) {
-	tcMux.Lock()
-	defer tcMux.Unlock()
-
-	nicArr := ifaceNames
-	slices.Sort(nicArr)
-	nicArr = slices.Compact(nicArr)
-
-	if tcProgram != nil {
-		tcProgram.Close()
-		tcProgram = nil
-	}
-
-	if len(nicArr) == 0 {
-		return
-	}
-
-	tunConf := GetTunConf()
-
-	if !tunConf.Enable {
-		return
-	}
-
-	program, err := ebpf.NewTcEBpfProgram(nicArr, tunConf.Device)
-	if err != nil {
-		log.Errorln("Attached tc ebpf program error: %v", err)
-		return
-	}
-	tcProgram = program
-
-	log.Infoln("Attached tc ebpf program to interfaces %v", tcProgram.RawNICs())
 }
 
 func hasTunConfigChange(tunConf *LC.Tun) bool {
@@ -188,8 +145,4 @@ func closeTunListener() {
 		tunLister.Close()
 		tunLister = nil
 	}
-}
-
-func Cleanup() {
-	closeTunListener()
 }

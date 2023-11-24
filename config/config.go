@@ -798,7 +798,6 @@ func parseTun(rawTun RawTun, general *General) error {
 		DNSHijack:           rawTun.DNSHijack,
 		AutoRoute:           rawTun.AutoRoute,
 		AutoDetectInterface: rawTun.AutoDetectInterface,
-		RedirectToTun:       rawTun.RedirectToTun,
 
 		MTU:                    rawTun.MTU,
 		Inet4Address:           []netip.Prefix{tunAddress},

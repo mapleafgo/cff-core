@@ -212,7 +212,6 @@ func updateTun(general *config.General) {
 		return
 	}
 	listener.ReCreateTun(general.Tun, tunnel.TCPIn(), tunnel.UDPIn())
-	listener.ReCreateRedirToTun(general.Tun.RedirectToTun)
 }
 
 func updateUsers(users []auth.AuthUser) {

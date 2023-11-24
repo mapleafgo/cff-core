@@ -6,7 +6,6 @@ import (
 	"io"
 	"net"
 	"net/netip"
-	"sync"
 	"time"
 
 	"github.com/Dreamacro/clash/common/pool"
@@ -15,7 +14,6 @@ import (
 	D "github.com/miekg/dns"
 
 	"github.com/sagernet/sing/common/buf"
-	"github.com/sagernet/sing/common/bufio"
 	M "github.com/sagernet/sing/common/metadata"
 	"github.com/sagernet/sing/common/network"
 )
@@ -29,7 +27,7 @@ type DnsListenerHandler struct {
 }
 
 func (h *DnsListenerHandler) NewError(ctx context.Context, err error) {
-	log.Warnln("TUN DNS listener get error: %+v", err)
+	log.Warnln("TUN DNS udpCloser get error: %+v", err)
 }
 
 func (h *DnsListenerHandler) ShouldHijackDns(targetAddr netip.AddrPort) bool {
@@ -103,38 +101,20 @@ func (h *DnsListenerHandler) NewConnection(ctx context.Context, conn net.Conn, m
 func (h *DnsListenerHandler) NewPacketConnection(ctx context.Context, conn network.PacketConn, metadata M.Metadata) error {
 	if h.ShouldHijackDns(metadata.Destination.AddrPort()) {
 		log.Debugln("[DNS] hijack udp:%s from %s", metadata.Destination.String(), metadata.Source.String())
-		defer func() { _ = conn.Close() }()
-		mutex := sync.Mutex{}
-		conn2 := conn // a new interface to set nil in defer
-		defer func() {
-			mutex.Lock() // this goroutine must exit after all conn.WritePacket() is not running
-			defer mutex.Unlock()
-			conn2 = nil
-		}()
 
-		var buff *buf.Buffer
-		newBuffer := func() *buf.Buffer {
-			// safe size which is 1232 from https://dnsflagday.net/2020/.
-			// so 2048 is enough
-			buff = buf.NewSize(2 * 1024)
-			return buff
+		c := &PacketCloser{
+			packetConn: conn,
+			closed:     false,
 		}
-		readWaiter, isReadWaiter := bufio.CreatePacketReadWaiter(conn)
-		if isReadWaiter {
-			readWaiter.InitializeReadWaiter(newBuffer)
-		}
+		defer func() { _ = c.Close() }()
+
+		// safe size which is 1232 from https://dnsflagday.net/2020/.
+		// so 2048 is enough
+		buff := buf.NewSize(2 * 1024)
 		for {
-			var (
-				dest M.Socksaddr
-				err  error
-			)
 			_ = conn.SetReadDeadline(time.Now().Add(DefaultDnsReadTimeout))
-			buff = nil // clear last loop status, avoid repeat release
-			if isReadWaiter {
-				dest, err = readWaiter.WaitReadPacket()
-			} else {
-				dest, err = conn.ReadPacket(newBuffer())
-			}
+			buff.FullReset()
+			dest, err := conn.ReadPacket(buff)
 			if err != nil {
 				if buff != nil {
 					buff.Release()
@@ -144,32 +124,31 @@ func (h *DnsListenerHandler) NewPacketConnection(ctx context.Context, conn netwo
 				}
 				return err
 			}
-			go func(buff *buf.Buffer) {
+			go func(buffer buf.Buffer) {
 				ctx, cancel := context.WithTimeout(ctx, DefaultDnsRelayTimeout)
 				defer cancel()
-				inData := buff.Bytes()
+				inData := buffer.Bytes()
 				msg, err := RelayDnsPacket(ctx, inData)
 				if err != nil {
-					buff.Release()
+					buffer.Release()
 					return
 				}
-				buff.Reset()
-				_, err = buff.Write(msg)
+				buffer.Reset()
+				_, err = buffer.Write(msg)
 				if err != nil {
-					buff.Release()
+					buffer.Release()
 					return
 				}
-				mutex.Lock()
-				defer mutex.Unlock()
-				conn := conn2
-				if conn == nil {
+				c.Lock()
+				defer c.Unlock()
+				if c.closed {
 					return
 				}
-				err = conn.WritePacket(buff, dest) // WritePacket will release buff
+				err = c.packetConn.WritePacket(&buffer, dest) // WritePacket will release buffer
 				if err != nil {
 					return
 				}
-			}(buff) // catch buff at goroutine create, avoid next loop change buff
+			}(*buff) // catch buffer at goroutine create, avoid next loop change buffer
 		}
 		return nil
 	}
