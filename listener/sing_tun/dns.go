@@ -19,7 +19,6 @@ import (
 )
 
 const DefaultDnsReadTimeout = time.Second * 10
-const DefaultDnsRelayTimeout = time.Second * 5
 
 type DnsListenerHandler struct {
 	ListenerHandler
@@ -70,10 +69,8 @@ func (h *DnsListenerHandler) NewConnection(ctx context.Context, conn net.Conn, m
 			}
 
 			err = func() error {
-				ctx, cancel := context.WithTimeout(ctx, DefaultDnsRelayTimeout)
-				defer cancel()
 				inData := buff[:n]
-				msg, err := RelayDnsPacket(ctx, inData)
+				msg, err := RelayDnsPacket(inData)
 				if err != nil {
 					return err
 				}
@@ -125,10 +122,8 @@ func (h *DnsListenerHandler) NewPacketConnection(ctx context.Context, conn netwo
 				return err
 			}
 			go func(buffer buf.Buffer) {
-				ctx, cancel := context.WithTimeout(ctx, DefaultDnsRelayTimeout)
-				defer cancel()
 				inData := buffer.Bytes()
-				msg, err := RelayDnsPacket(ctx, inData)
+				msg, err := RelayDnsPacket(inData)
 				if err != nil {
 					buffer.Release()
 					return
@@ -155,7 +150,7 @@ func (h *DnsListenerHandler) NewPacketConnection(ctx context.Context, conn netwo
 	return h.ListenerHandler.NewPacketConnection(ctx, conn, metadata)
 }
 
-func RelayDnsPacket(ctx context.Context, payload []byte) ([]byte, error) {
+func RelayDnsPacket(payload []byte) ([]byte, error) {
 	msg := &D.Msg{}
 	if err := msg.Unpack(payload); err != nil {
 		return nil, err
