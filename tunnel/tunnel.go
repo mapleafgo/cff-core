@@ -39,17 +39,7 @@ var (
 
 	// experimental feature
 	UDPFallbackMatch = atomic.NewBool(false)
-
-	fakeIPRange netip.Prefix
 )
-
-func SetFakeIPRange(p netip.Prefix) {
-	fakeIPRange = p
-}
-
-func FakeIPRange() netip.Prefix {
-	return fakeIPRange
-}
 
 func init() {
 	go process()
