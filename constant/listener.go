@@ -21,6 +21,7 @@ const (
 	InboundTypeTproxy InboundType = "tproxy"
 	InboundTypeHTTP   InboundType = "http"
 	InboundTypeMixed  InboundType = "mixed"
+	InboundTypeTun    InboundType = "tun"
 )
 
 var supportInboundTypes = map[InboundType]bool{
@@ -29,6 +30,7 @@ var supportInboundTypes = map[InboundType]bool{
 	InboundTypeTproxy: true,
 	InboundTypeHTTP:   true,
 	InboundTypeMixed:  true,
+	InboundTypeTun:    true,
 }
 
 type inbound struct {

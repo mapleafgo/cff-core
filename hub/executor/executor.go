@@ -75,6 +75,7 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	updateGeneral(cfg.General, force)
 	updateInbounds(cfg.Inbounds, force)
 	updateDNS(cfg.DNS)
+	updateTun(cfg.General)
 	updateExperimental(cfg)
 	updateTunnels(cfg.Tunnels)
 }
@@ -145,6 +146,7 @@ func updateDNS(c *config.DNS) {
 
 	resolver.DefaultResolver = r
 	resolver.DefaultHostMapper = m
+	resolver.DefaultLocalServer = dns.NewLocalServer(r, m)
 
 	dns.ReCreateServer(c.Listen, r, m)
 }
@@ -203,6 +205,14 @@ func updateGeneral(general *config.General, force bool) {
 		MixedPort:  general.MixedPort,
 	}
 	listener.ReCreatePortsListeners(ports, tunnel.TCPIn(), tunnel.UDPIn())
+}
+
+func updateTun(general *config.General) {
+	if general == nil {
+		return
+	}
+	listener.ReCreateTun(general.Tun, tunnel.TCPIn(), tunnel.UDPIn())
+	listener.ReCreateRedirToTun(general.Tun.RedirectToTun)
 }
 
 func updateUsers(users []auth.AuthUser) {

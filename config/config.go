@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"net/netip"
 	"net/url"
 	"os"
 	"strings"
@@ -53,6 +54,7 @@ type LegacyInbound struct {
 	MixedPort   int    `json:"mixed-port"`
 	AllowLan    bool   `json:"allow-lan"`
 	BindAddress string `json:"bind-address"`
+	Tun         Tun    `json:"tun"`
 }
 
 // DNS config
@@ -126,6 +128,35 @@ type RawFallbackFilter struct {
 	GeoIPCode string   `yaml:"geoip-code"`
 	IPCIDR    []string `yaml:"ipcidr"`
 	Domain    []string `yaml:"domain"`
+}
+
+type RawTun struct {
+	Enable              bool       `yaml:"enable" json:"enable"`
+	Device              string     `yaml:"device" json:"device"`
+	Stack               C.TUNStack `yaml:"stack" json:"stack"`
+	DNSHijack           []string   `yaml:"dns-hijack" json:"dns-hijack"`
+	AutoRoute           bool       `yaml:"auto-route" json:"auto-route"`
+	AutoDetectInterface bool       `yaml:"auto-detect-interface"`
+	RedirectToTun       []string   `yaml:"-" json:"-"`
+
+	MTU uint32 `yaml:"mtu" json:"mtu,omitempty"`
+	//Inet4Address           []netip.Prefix `yaml:"inet4-address" json:"inet4_address,omitempty"`
+	Inet6Address             []netip.Prefix `yaml:"inet6-address" json:"inet6_address,omitempty"`
+	StrictRoute              bool           `yaml:"strict-route" json:"strict_route,omitempty"`
+	Inet4RouteAddress        []netip.Prefix `yaml:"inet4-route-address" json:"inet4_route_address,omitempty"`
+	Inet6RouteAddress        []netip.Prefix `yaml:"inet6-route-address" json:"inet6_route_address,omitempty"`
+	Inet4RouteExcludeAddress []netip.Prefix `yaml:"inet4-route-exclude-address" json:"inet4_route_exclude_address,omitempty"`
+	Inet6RouteExcludeAddress []netip.Prefix `yaml:"inet6-route-exclude-address" json:"inet6_route_exclude_address,omitempty"`
+	IncludeUID               []uint32       `yaml:"include-uid" json:"include_uid,omitempty"`
+	IncludeUIDRange          []string       `yaml:"include-uid-range" json:"include_uid_range,omitempty"`
+	ExcludeUID               []uint32       `yaml:"exclude-uid" json:"exclude_uid,omitempty"`
+	ExcludeUIDRange          []string       `yaml:"exclude-uid-range" json:"exclude_uid_range,omitempty"`
+	IncludeAndroidUser       []int          `yaml:"include-android-user" json:"include_android_user,omitempty"`
+	IncludePackage           []string       `yaml:"include-package" json:"include_package,omitempty"`
+	ExcludePackage           []string       `yaml:"exclude-package" json:"exclude_package,omitempty"`
+	EndpointIndependentNat   bool           `yaml:"endpoint-independent-nat" json:"endpoint_independent_nat,omitempty"`
+	UDPTimeout               int64          `yaml:"udp-timeout" json:"udp_timeout,omitempty"`
+	FileDescriptor           int            `yaml:"file-descriptor" json:"file-descriptor"`
 }
 
 type tunnel struct {
@@ -209,6 +240,7 @@ type RawConfig struct {
 	Hosts         map[string]string         `yaml:"hosts"`
 	Inbounds      []C.Inbound               `yaml:"inbounds"`
 	DNS           RawDNS                    `yaml:"dns"`
+	Tun           RawTun                    `yaml:"tun"`
 	Experimental  Experimental              `yaml:"experimental"`
 	Profile       Profile                   `yaml:"profile"`
 	Proxy         []map[string]any          `yaml:"proxies"`
@@ -254,6 +286,15 @@ func UnmarshalRawConfig(buf []byte) (*RawConfig, error) {
 		},
 		Profile: Profile{
 			StoreSelected: true,
+		},
+		Tun: RawTun{
+			Enable:              false,
+			Device:              "",
+			Stack:               C.TunGvisor,
+			DNSHijack:           []string{"0.0.0.0:53"}, // default hijack all dns query
+			AutoRoute:           true,
+			AutoDetectInterface: true,
+			Inet6Address:        []netip.Prefix{netip.MustParsePrefix("fdfe:dcba:9876::1/126")},
 		},
 	}
 
@@ -302,6 +343,11 @@ func ParseRawConfig(rawCfg *RawConfig) (*Config, error) {
 		return nil, err
 	}
 	config.DNS = dnsCfg
+
+	err = parseTun(rawCfg.Tun, config.General)
+	if err != nil {
+		return nil, err
+	}
 
 	config.Users = parseAuthentication(rawCfg.Authentication)
 
@@ -668,6 +714,8 @@ func parseDNS(rawCfg *RawConfig, hosts *trie.DomainTrie) (*DNS, error) {
 		}
 	}
 
+	fakeIPRange, err := netip.ParsePrefix(cfg.FakeIPRange)
+	T.SetFakeIPRange(fakeIPRange)
 	if cfg.EnhancedMode == C.DNSFakeIP {
 		_, ipnet, err := net.ParseCIDR(cfg.FakeIPRange)
 		if err != nil {
@@ -730,4 +778,45 @@ func parseAuthentication(rawRecords []string) []auth.AuthUser {
 		}
 	}
 	return users
+}
+
+func parseTun(rawTun RawTun, general *General) error {
+	tunAddress := T.FakeIPRange()
+	if !tunAddress.IsValid() {
+		tunAddress = netip.MustParsePrefix("198.18.0.1/16")
+	}
+	tunAddress = netip.PrefixFrom(tunAddress.Addr(), 30)
+
+	if !general.IPv6 || !verifyIP6() {
+		rawTun.Inet6Address = nil
+	}
+
+	general.Tun = Tun{
+		Enable:              rawTun.Enable,
+		Device:              rawTun.Device,
+		Stack:               rawTun.Stack,
+		DNSHijack:           rawTun.DNSHijack,
+		AutoRoute:           rawTun.AutoRoute,
+		AutoDetectInterface: rawTun.AutoDetectInterface,
+		RedirectToTun:       rawTun.RedirectToTun,
+
+		MTU:                    rawTun.MTU,
+		Inet4Address:           []netip.Prefix{tunAddress},
+		Inet6Address:           rawTun.Inet6Address,
+		StrictRoute:            rawTun.StrictRoute,
+		Inet4RouteAddress:      rawTun.Inet4RouteAddress,
+		Inet6RouteAddress:      rawTun.Inet6RouteAddress,
+		IncludeUID:             rawTun.IncludeUID,
+		IncludeUIDRange:        rawTun.IncludeUIDRange,
+		ExcludeUID:             rawTun.ExcludeUID,
+		ExcludeUIDRange:        rawTun.ExcludeUIDRange,
+		IncludeAndroidUser:     rawTun.IncludeAndroidUser,
+		IncludePackage:         rawTun.IncludePackage,
+		ExcludePackage:         rawTun.ExcludePackage,
+		EndpointIndependentNat: rawTun.EndpointIndependentNat,
+		UDPTimeout:             rawTun.UDPTimeout,
+		FileDescriptor:         rawTun.FileDescriptor,
+	}
+
+	return nil
 }
