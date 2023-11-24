@@ -35,7 +35,7 @@ type General struct {
 	Mode           T.TunnelMode `json:"mode"`
 	LogLevel       log.LogLevel `json:"log-level"`
 	IPv6           bool         `json:"ipv6"`
-	Interface      string       `json:"-"`
+	Interface      string       `json:"interface-name"`
 	RoutingMark    int          `json:"-"`
 }
 

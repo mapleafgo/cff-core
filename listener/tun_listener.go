@@ -2,7 +2,7 @@ package listener
 
 import (
 	"github.com/Dreamacro/clash/adapter/inbound"
-	LC "github.com/Dreamacro/clash/config"
+	"github.com/Dreamacro/clash/config"
 	C "github.com/Dreamacro/clash/constant"
 	"github.com/Dreamacro/clash/listener/sing_tun"
 	"github.com/Dreamacro/clash/log"
@@ -16,10 +16,17 @@ var (
 
 	tunMux sync.Mutex
 
-	LastTunConf LC.Tun
+	LastTunConf config.Tun
 )
 
-func ReCreateTun(tunConf LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.PacketAdapter) {
+func GetTunConf() config.Tun {
+	if tunLister == nil {
+		return LastTunConf
+	}
+	return tunLister.Config()
+}
+
+func ReCreateTun(tunConf config.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.PacketAdapter) {
 	tunMux.Lock()
 	defer func() {
 		LastTunConf = tunConf
@@ -41,7 +48,7 @@ func ReCreateTun(tunConf LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbou
 		return
 	}
 
-	closeTunListener()
+	CloseTunListener()
 
 	if !tunConf.Enable {
 		return
@@ -56,7 +63,7 @@ func ReCreateTun(tunConf LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbou
 	log.Infoln("[TUN] Tun adapter listening at: %s", tunLister.Address())
 }
 
-func hasTunConfigChange(tunConf *LC.Tun) bool {
+func hasTunConfigChange(tunConf *config.Tun) bool {
 	if LastTunConf.Enable != tunConf.Enable ||
 		LastTunConf.Device != tunConf.Device ||
 		LastTunConf.Stack != tunConf.Stack ||
@@ -140,7 +147,7 @@ func hasTunConfigChange(tunConf *LC.Tun) bool {
 	return false
 }
 
-func closeTunListener() {
+func CloseTunListener() {
 	if tunLister != nil {
 		tunLister.Close()
 		tunLister = nil
