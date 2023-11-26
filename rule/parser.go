@@ -39,12 +39,9 @@ func ParseRule(tp, payload, target string, params []string) (C.Rule, error) {
 		parsed, parseErr = NewProcess(payload, target, true)
 	case C.RuleConfigProcessPath:
 		parsed, parseErr = NewProcess(payload, target, false)
-	case C.RuleConfigIPSet:
-		noResolve := HasNoResolve(params)
-		parsed, parseErr = NewIPSet(payload, target, noResolve)
 	case C.RuleConfigMatch:
 		parsed = NewMatch(target)
-	case C.RuleConfigRuleSet, C.RuleConfigScript:
+	case C.RuleConfigIPSet, C.RuleConfigRuleSet, C.RuleConfigScript:
 		parseErr = fmt.Errorf("unsupported rule type %s", tp)
 	default:
 		parseErr = fmt.Errorf("unsupported rule type %s", tp)

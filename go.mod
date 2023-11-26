@@ -20,7 +20,6 @@ require (
 	github.com/samber/lo v1.38.1
 	github.com/sirupsen/logrus v1.9.3
 	github.com/stretchr/testify v1.8.4
-	github.com/vishvananda/netlink v1.1.0
 	go.etcd.io/bbolt v1.3.8
 	go.uber.org/atomic v1.11.0
 	go.uber.org/automaxprocs v1.5.3
