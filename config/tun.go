@@ -16,24 +16,21 @@ type RawTun struct {
 	AutoDetectInterface bool       `yaml:"auto-detect-interface"`
 	RedirectToTun       []string   `yaml:"-" json:"-"`
 
-	MTU uint32 `yaml:"mtu" json:"mtu,omitempty"`
-	//Inet4Address           []netip.Prefix `yaml:"inet4-address" json:"inet4_address,omitempty"`
-	Inet6Address             []netip.Prefix `yaml:"inet6-address" json:"inet6_address,omitempty"`
-	StrictRoute              bool           `yaml:"strict-route" json:"strict_route,omitempty"`
-	Inet4RouteAddress        []netip.Prefix `yaml:"inet4-route-address" json:"inet4_route_address,omitempty"`
-	Inet6RouteAddress        []netip.Prefix `yaml:"inet6-route-address" json:"inet6_route_address,omitempty"`
-	Inet4RouteExcludeAddress []netip.Prefix `yaml:"inet4-route-exclude-address" json:"inet4_route_exclude_address,omitempty"`
-	Inet6RouteExcludeAddress []netip.Prefix `yaml:"inet6-route-exclude-address" json:"inet6_route_exclude_address,omitempty"`
-	IncludeUID               []uint32       `yaml:"include-uid" json:"include_uid,omitempty"`
-	IncludeUIDRange          []string       `yaml:"include-uid-range" json:"include_uid_range,omitempty"`
-	ExcludeUID               []uint32       `yaml:"exclude-uid" json:"exclude_uid,omitempty"`
-	ExcludeUIDRange          []string       `yaml:"exclude-uid-range" json:"exclude_uid_range,omitempty"`
-	IncludeAndroidUser       []int          `yaml:"include-android-user" json:"include_android_user,omitempty"`
-	IncludePackage           []string       `yaml:"include-package" json:"include_package,omitempty"`
-	ExcludePackage           []string       `yaml:"exclude-package" json:"exclude_package,omitempty"`
-	EndpointIndependentNat   bool           `yaml:"endpoint-independent-nat" json:"endpoint_independent_nat,omitempty"`
-	UDPTimeout               int64          `yaml:"udp-timeout" json:"udp_timeout,omitempty"`
-	FileDescriptor           int            `yaml:"file-descriptor" json:"file-descriptor"`
+	MTU                    uint32         `yaml:"mtu" json:"mtu,omitempty"`
+	Inet6Address           []netip.Prefix `yaml:"inet6-address" json:"inet6_address,omitempty"`
+	StrictRoute            bool           `yaml:"strict-route" json:"strict_route,omitempty"`
+	Inet4RouteAddress      []netip.Prefix `yaml:"inet4-route-address" json:"inet4_route_address,omitempty"`
+	Inet6RouteAddress      []netip.Prefix `yaml:"inet6-route-address" json:"inet6_route_address,omitempty"`
+	IncludeUID             []uint32       `yaml:"include-uid" json:"include_uid,omitempty"`
+	IncludeUIDRange        []string       `yaml:"include-uid-range" json:"include_uid_range,omitempty"`
+	ExcludeUID             []uint32       `yaml:"exclude-uid" json:"exclude_uid,omitempty"`
+	ExcludeUIDRange        []string       `yaml:"exclude-uid-range" json:"exclude_uid_range,omitempty"`
+	IncludeAndroidUser     []int          `yaml:"include-android-user" json:"include_android_user,omitempty"`
+	IncludePackage         []string       `yaml:"include-package" json:"include_package,omitempty"`
+	ExcludePackage         []string       `yaml:"exclude-package" json:"exclude_package,omitempty"`
+	EndpointIndependentNat bool           `yaml:"endpoint-independent-nat" json:"endpoint_independent_nat,omitempty"`
+	UDPTimeout             int64          `yaml:"udp-timeout" json:"udp_timeout,omitempty"`
+	FileDescriptor         int            `yaml:"file-descriptor" json:"file-descriptor"`
 }
 
 type Tun struct {
