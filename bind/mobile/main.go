@@ -64,10 +64,9 @@ func StartService() bool {
 	return true
 }
 
-func OperateTun(enable bool, device string, stack int) {
+func OperateTun(fileDescriptor int32, enable bool) {
 	tun := listener.LastTunConf
 	tun.Enable = enable
-	tun.Device = device
-	tun.Stack = constant.TUNStack(stack)
+	tun.FileDescriptor = int(fileDescriptor)
 	listener.ReCreateTun(tun, tunnel.TCPIn(), tunnel.UDPIn())
 }

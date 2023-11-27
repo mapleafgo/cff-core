@@ -102,12 +102,14 @@ func New(options LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.Packe
 	if tunMTU == 0 {
 		tunMTU = 9000
 	}
+	// parse udp timeout
 	var udpTimeout int64
 	if options.UDPTimeout != 0 {
 		udpTimeout = options.UDPTimeout
 	} else {
 		udpTimeout = int64(UDPTimeout.Seconds())
 	}
+	// parse include uid
 	includeUID := uidToRange(options.IncludeUID)
 	if len(options.IncludeUIDRange) > 0 {
 		var err error
@@ -116,6 +118,7 @@ func New(options LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.Packe
 			return nil, E.Cause(err, "parse include_uid_range")
 		}
 	}
+	// parse exclude uid
 	excludeUID := uidToRange(options.ExcludeUID)
 	if len(options.ExcludeUIDRange) > 0 {
 		var err error
@@ -125,8 +128,8 @@ func New(options LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.Packe
 		}
 	}
 
+	// parse dns hijack
 	var dnsAdds []netip.AddrPort
-
 	for _, d := range options.DNSHijack {
 		if _, after, ok := strings.Cut(d, "://"); ok {
 			d = after
