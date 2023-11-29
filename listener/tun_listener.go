@@ -54,7 +54,12 @@ func ReCreateTun(tunConf config.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *i
 		return
 	}
 
-	lister, err := sing_tun.New(tunConf, tcpIn, udpIn)
+	var lister *sing_tun.Listener
+	if tunConf.TunIf {
+		lister, err = sing_tun.ConnectTun(tunConf, tcpIn, udpIn)
+	} else {
+		lister, err = sing_tun.New(tunConf, tcpIn, udpIn)
+	}
 	if err != nil {
 		return
 	}

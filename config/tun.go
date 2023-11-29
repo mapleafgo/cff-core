@@ -15,6 +15,7 @@ type RawTun struct {
 	AutoRoute           bool       `yaml:"auto-route" json:"auto-route"`
 	AutoDetectInterface bool       `yaml:"auto-detect-interface"`
 	RedirectToTun       []string   `yaml:"-" json:"-"`
+	TunIf               bool       `yaml:"-" json:"-"`
 
 	MTU                    uint32         `yaml:"mtu" json:"mtu,omitempty"`
 	Inet6Address           []netip.Prefix `yaml:"inet6-address" json:"inet6_address,omitempty"`
@@ -40,6 +41,7 @@ type Tun struct {
 	DNSHijack           []string   `yaml:"dns-hijack" json:"dns-hijack"`
 	AutoRoute           bool       `yaml:"auto-route" json:"auto-route"`
 	AutoDetectInterface bool       `yaml:"auto-detect-interface" json:"auto-detect-interface"`
+	TunIf               bool       `yaml:"-" json:"-"`
 
 	MTU                    uint32         `yaml:"mtu" json:"mtu,omitempty"`
 	Inet4Address           []netip.Prefix `yaml:"inet4-address" json:"inet4-address,omitempty"`
@@ -62,6 +64,7 @@ type Tun struct {
 func defaultTun() *RawTun {
 	return &RawTun{
 		Enable:              false,
+		TunIf:               false,
 		Device:              "",
 		Stack:               C.TunGvisor,
 		DNSHijack:           []string{"0.0.0.0:53"}, // default hijack all dns query

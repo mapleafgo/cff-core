@@ -317,3 +317,78 @@ func parseRange(uidRanges []ranges.Range[uint32], rangeList []string) ([]ranges.
 	}
 	return uidRanges, nil
 }
+
+func ConnectTun(options LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inbound.PacketAdapter) (l *Listener, err error) {
+	// parse udp timeout
+	var udpTimeout int64
+	if options.UDPTimeout != 0 {
+		udpTimeout = options.UDPTimeout
+	} else {
+		udpTimeout = int64(UDPTimeout.Seconds())
+	}
+
+	handler := &DnsListenerHandler{
+		ListenerHandler: ListenerHandler{
+			TcpIn:      tcpIn,
+			UdpIn:      udpIn,
+			UDPTimeout: time.Second * time.Duration(udpTimeout),
+		},
+		DnsAdds: []netip.AddrPort{},
+	}
+
+	l = &Listener{
+		closed:  false,
+		options: options,
+		handler: handler,
+	}
+	defer func() {
+		if err != nil {
+			l.Close()
+			l = nil
+		}
+	}()
+
+	tunOptions := tun.Options{
+		FileDescriptor: options.FileDescriptor,
+		AutoRoute:      false,
+		MTU:            options.MTU,
+		Logger:         log.SingLogger,
+	}
+	tunIf, err := tun.New(tunOptions)
+	if err != nil {
+		err = E.Cause(err, "configure tun interface")
+		return
+	}
+
+	stackOptions := tun.StackOptions{
+		Context:                context.TODO(),
+		Tun:                    tunIf,
+		MTU:                    options.MTU,
+		Name:                   options.Device,
+		Inet4Address:           options.Inet4Address,
+		Inet6Address:           options.Inet6Address,
+		EndpointIndependentNat: options.EndpointIndependentNat,
+		UDPTimeout:             udpTimeout,
+		Handler:                handler,
+		Logger:                 log.SingLogger,
+	}
+
+	if tunName, err := getTunnelName(int32(options.FileDescriptor)); err != nil {
+		stackOptions.Name = tunName
+		stackOptions.ForwarderBindInterface = true
+	}
+	l.tunIf = tunIf
+	l.tunStack, err = tun.NewStack(strings.ToLower(options.Stack.String()), stackOptions)
+	if err != nil {
+		return
+	}
+
+	err = l.tunStack.Start()
+	if err != nil {
+		return
+	}
+
+	l.addr = fmt.Sprintf("%s(%s,%s), mtu: %d, auto route: %v, ip stack: %s",
+		stackOptions.Name, stackOptions.Inet4Address, stackOptions.Inet6Address, stackOptions.MTU, options.AutoRoute, options.Stack)
+	return
+}
