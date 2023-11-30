@@ -15,3 +15,7 @@ func getEscapeParam(r *http.Request, paramName string) string {
 	}
 	return param
 }
+
+func GetAddr() string {
+	return serverAddr
+}

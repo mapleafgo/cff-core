@@ -327,13 +327,36 @@ func ConnectTun(options LC.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *inboun
 		udpTimeout = int64(UDPTimeout.Seconds())
 	}
 
+	// parse dns hijack
+	var dnsAdds []netip.AddrPort
+	for _, d := range options.DNSHijack {
+		if _, after, ok := strings.Cut(d, "://"); ok {
+			d = after
+		}
+		d = strings.Replace(d, "any", "0.0.0.0", 1)
+		addrPort, err := netip.ParseAddrPort(d)
+		if err != nil {
+			return nil, fmt.Errorf("parse dns-hijack url error: %w", err)
+		}
+
+		dnsAdds = append(dnsAdds, addrPort)
+	}
+	for _, a := range options.Inet4Address {
+		addrPort := netip.AddrPortFrom(a.Addr().Next(), 53)
+		dnsAdds = append(dnsAdds, addrPort)
+	}
+	for _, a := range options.Inet6Address {
+		addrPort := netip.AddrPortFrom(a.Addr().Next(), 53)
+		dnsAdds = append(dnsAdds, addrPort)
+	}
+
 	handler := &DnsListenerHandler{
 		ListenerHandler: ListenerHandler{
 			TcpIn:      tcpIn,
 			UdpIn:      udpIn,
 			UDPTimeout: time.Second * time.Duration(udpTimeout),
 		},
-		DnsAdds: []netip.AddrPort{},
+		DnsAdds: dnsAdds,
 	}
 
 	l = &Listener{

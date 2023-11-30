@@ -50,8 +50,13 @@ func VerifyMMDB(path string) bool {
 	return err == nil
 }
 
-func StartController(controller string) {
-	go route.Start(controller, "")
+func StartRust(addr string) string {
+	go route.Start(addr, "")
+	oldAddr := route.GetAddr()
+	if oldAddr == "" {
+		return addr
+	}
+	return oldAddr
 }
 
 func StartService() bool {

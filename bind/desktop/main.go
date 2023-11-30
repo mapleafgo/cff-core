@@ -54,9 +54,14 @@ func VerifyMMDB(path *C.char) bool {
 	return err == nil
 }
 
-//export StartController
-func StartController(controller *C.char) {
-	go route.Start(C.GoString(controller), "")
+//export StartRust
+func StartRust(addr *C.char) *C.char {
+	go route.Start(C.GoString(addr), "")
+	oldAddr := route.GetAddr()
+	if oldAddr == "" {
+		return addr
+	}
+	return C.CString(oldAddr)
 }
 
 //export StartService
