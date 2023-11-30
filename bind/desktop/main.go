@@ -66,6 +66,11 @@ func StartRust(addr *C.char) *C.char {
 
 //export StartService
 func StartService() bool {
+	if constant.Path.Config() == "config.yaml" {
+		configFile := filepath.Join(constant.Path.HomeDir(), constant.Path.Config())
+		constant.SetConfig(configFile)
+	}
+
 	cfg, err := executor.Parse()
 	if err != nil {
 		log.Errorln("[Clash Lib] StartService: Parse config error: %+v", err)

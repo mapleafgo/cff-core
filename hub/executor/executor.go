@@ -75,7 +75,7 @@ func ApplyConfig(cfg *config.Config, force bool) {
 	updateGeneral(cfg.General, force)
 	updateInbounds(cfg.Inbounds, force)
 	updateDNS(cfg.DNS)
-	updateTun(cfg.General)
+	updateTun(cfg.General, force)
 	updateExperimental(cfg)
 	updateTunnels(cfg.Tunnels)
 }
@@ -209,8 +209,8 @@ func updateGeneral(general *config.General, force bool) {
 	listener.ReCreatePortsListeners(ports, tunnel.TCPIn(), tunnel.UDPIn())
 }
 
-func updateTun(general *config.General) {
-	if general == nil {
+func updateTun(general *config.General, force bool) {
+	if general == nil || !force {
 		return
 	}
 	listener.ReCreateTun(general.Tun, tunnel.TCPIn(), tunnel.UDPIn())

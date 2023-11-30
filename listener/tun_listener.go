@@ -41,7 +41,7 @@ func ReCreateTun(tunConf config.Tun, tcpIn chan<- C.ConnContext, udpIn chan<- *i
 		}
 	}()
 
-	if LastTunConf.TunIf && !tunConf.TunIf {
+	if tunLister != nil && tunLister.Config().TunIf && !tunConf.TunIf {
 		return
 	}
 
