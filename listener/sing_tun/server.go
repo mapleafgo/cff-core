@@ -62,7 +62,7 @@ func (l *Listener) Config() LC.Tun {
 }
 
 func (l *Listener) FlushDefaultInterface() {
-	if l.options.AutoDetectInterface {
+	if l.options.AutoDetectInterface && l.defaultInterfaceMonitor != nil {
 		targetInterface := dialer.DefaultInterface.Load()
 		for _, destination := range []netip.Addr{netip.IPv4Unspecified(), netip.IPv6Unspecified(), netip.MustParseAddr("1.1.1.1")} {
 			autoDetectInterfaceName := l.defaultInterfaceMonitor.DefaultInterfaceName(destination)
