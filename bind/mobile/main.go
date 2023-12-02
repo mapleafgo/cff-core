@@ -13,6 +13,9 @@ import (
 	"path/filepath"
 )
 
+// status service status
+var status = false
+
 func init() {
 	_, _ = maxprocs.Set(maxprocs.Logger(func(string, ...any) {}))
 }
@@ -60,6 +63,10 @@ func StartRust(addr string) string {
 }
 
 func StartService() bool {
+	if status {
+		return status
+	}
+
 	if constant.Path.Config() == "config.yaml" {
 		configFile := filepath.Join(constant.Path.HomeDir(), constant.Path.Config())
 		constant.SetConfig(configFile)
@@ -68,10 +75,12 @@ func StartService() bool {
 	cfg, err := executor.Parse()
 	if err != nil {
 		log.Errorln("[Clash Lib] StartService: Parse config error: %+v", err)
-		return false
+		return status
 	}
 	executor.ApplyConfig(cfg, true)
-	return true
+
+	status = true
+	return status
 }
 
 func OperateTun(enable bool, fileDescriptor, mtu int32) {
