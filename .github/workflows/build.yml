@@ -80,9 +80,6 @@ jobs:
       - uses: actions/setup-go@v4
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Set ENV
-        run: |
-          timedatectl set-timezone "Asia/Shanghai"
       - name: Build
         env:
           VERSION: ${{ needs.get-release.outputs.tag_name }}
