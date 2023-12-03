@@ -36,19 +36,19 @@ jobs:
           VERSION: ${{ needs.get-release.outputs.tag_name }}
         run: |
           go install src.techknowlogick.com/xgo@latest
-          mkdir dist && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
+          mkdir build && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
           tar -czf libclash-$VERSION-windows-amd64.tar.gz build && sudo rm -rf build
 
-          mkdir dist && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
+          mkdir build && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-amd64.tar.gz build && sudo rm -rf build
 
-          mkdir dist && xgo --targets=linux/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
+          mkdir build && xgo --targets=linux/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-arm64.tar.gz build && sudo rm -rf build
 
-          mkdir dist && xgo --targets=darwin/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
+          mkdir build && xgo --targets=darwin/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
           tar -czf libclash-$VERSION-darwin-arm64.tar.gz build && sudo rm -rf build
 
-          mkdir dist && xgo --targets=darwin/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
+          mkdir build && xgo --targets=darwin/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
           tar -czf libclash-$VERSION-darwin-amd64.tar.gz build && sudo rm -rf build
       - uses: nttld/setup-ndk@v1
         with:
@@ -62,7 +62,7 @@ jobs:
           go install golang.org/x/mobile/cmd/gomobile@latest
           go get golang.org/x/mobile/bind
           gomobile init
-          mkdir dist && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor" -o build/libclash.aar -target=android/arm64 -androidapi 29 -javapkg cn.mapleafgo github.com/Dreamacro/clash/bind/mobile
+          mkdir build && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor" -o build/libclash.aar -target=android/arm64 -androidapi 29 -javapkg cn.mapleafgo github.com/Dreamacro/clash/bind/mobile
 
           tar -czf libclash-$VERSION-android-arm64.tar.gz build && rm -rf build
       - name: Upload
@@ -86,7 +86,7 @@ jobs:
           go install golang.org/x/mobile/cmd/gomobile@latest
           go get golang.org/x/mobile/bind
           gomobile init
-          mkdir dist && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s"  -tags="with_gvisor" -o build/libclash.xcframework -target=ios github.com/Dreamacro/clash/bind/mobile
+          mkdir build && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s"  -tags="with_gvisor" -o build/libclash.xcframework -target=ios github.com/Dreamacro/clash/bind/mobile
 
           tar -czf libclash-$VERSION-ios.tar.gz build && rm -rf build
       - name: Upload
