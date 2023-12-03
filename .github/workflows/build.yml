@@ -43,6 +43,12 @@ jobs:
 
           mkdir build && xgo --targets=darwin/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
           tar -czf libclash-$VERSION-darwin-amd64.tar.gz build && rm -rf build
+      - name: Upload
+        uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.get-release.outputs.upload_url }}
+          asset_path: ./*tar.gz
+          overwrite: true
   build-android:
     runs-on: ubuntu-latest
     needs: [ get-release ]
