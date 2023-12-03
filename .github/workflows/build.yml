@@ -36,19 +36,19 @@ jobs:
           VERSION: ${{ needs.get-release.outputs.tag_name }}
         run: |
           go install src.techknowlogick.com/xgo@latest
-          mkdir dist && xgo --targets=darwin/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib bind/desktop
+          mkdir dist && xgo --targets=darwin/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
           tar -czf libclash-$VERSION-darwin-arm64.tar.gz build && rm -rf build
 
-          mkdir dist && xgo --targets=darwin/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib bind/desktop
+          mkdir dist && xgo --targets=darwin/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dylib ./bind/desktop
           tar -czf libclash-$VERSION-darwin-amd64.tar.gz build && rm -rf build
 
-          mkdir dist && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll bind/desktop
+          mkdir dist && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
           tar -czf libclash-$VERSION-windows-amd64.tar.gz build && rm -rf build
 
-          mkdir dist && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so bind/desktop
+          mkdir dist && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-amd64.tar.gz build && rm -rf build
 
-          mkdir dist && xgo --targets=linux/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so bind/desktop
+          mkdir dist && xgo --targets=linux/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=${BUILDTIME}' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-arm64.tar.gz build && rm -rf build
       - uses: nttld/setup-ndk@v1
         with:
