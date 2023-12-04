@@ -32,9 +32,6 @@ jobs:
           mkdir build && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
           tar -czf libclash-$VERSION-windows-amd64.tar.gz build && rm -rf build
 
-          mkdir build && xgo --targets=windows/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
-          tar -czf libclash-$VERSION-windows-arm64.tar.gz build && rm -rf build
-
           mkdir build && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-amd64.tar.gz build && rm -rf build
 
