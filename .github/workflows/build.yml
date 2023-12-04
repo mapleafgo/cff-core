@@ -32,6 +32,9 @@ jobs:
           mkdir build && xgo --targets=windows/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
           tar -czf libclash-$VERSION-windows-amd64.tar.gz build && rm -rf build
 
+          mkdir build && xgo --targets=windows/arm64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.dll ./bind/desktop
+          tar -czf libclash-$VERSION-windows-arm64.tar.gz build && rm -rf build
+
           mkdir build && xgo --targets=linux/amd64 -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor,with_lwip" -buildmode=c-shared -out=build/libclash.so ./bind/desktop
           tar -czf libclash-$VERSION-linux-amd64.tar.gz build && rm -rf build
 
@@ -49,7 +52,7 @@ jobs:
           upload_url: ${{ needs.get-release.outputs.upload_url }}
           asset_path: ./*tar.gz
           overwrite: true
-  build-android:
+  build-android-arm64:
     runs-on: ubuntu-latest
     needs: [ get-release ]
     steps:
@@ -72,6 +75,35 @@ jobs:
           mkdir build && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor" -o build/libclash.aar -target=android/arm64 -androidapi 29 -javapkg cn.mapleafgo github.com/Dreamacro/clash/bind/mobile
 
           tar -czf libclash-$VERSION-android-arm64.tar.gz build && rm -rf build
+      - name: Upload
+        uses: shogo82148/actions-upload-release-asset@v1
+        with:
+          upload_url: ${{ needs.get-release.outputs.upload_url }}
+          asset_path: ./*tar.gz
+          overwrite: true
+  build-android-amd64:
+    runs-on: ubuntu-latest
+    needs: [ get-release ]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v4
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - uses: nttld/setup-ndk@v1
+        with:
+          ndk-version: r26
+          add-to-path: false
+          local-cache: true
+      - name: Build
+        env:
+          VERSION: ${{ needs.get-release.outputs.tag_name }}
+        run: |
+          go install golang.org/x/mobile/cmd/gomobile@latest
+          go get golang.org/x/mobile/bind
+          gomobile init
+          mkdir build && gomobile bind -trimpath -ldflags="-X 'github.com/Dreamacro/clash/constant.Version=${VERSION}' -X 'github.com/Dreamacro/clash/constant.BuildTime=$(date)' -w -s" -tags="with_gvisor" -o build/libclash.aar -target=android/amd64 -androidapi 29 -javapkg cn.mapleafgo github.com/Dreamacro/clash/bind/mobile
+
+          tar -czf libclash-$VERSION-android-amd64.tar.gz build && rm -rf build
       - name: Upload
         uses: shogo82148/actions-upload-release-asset@v1
         with:
